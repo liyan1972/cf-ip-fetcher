@@ -1,0 +1,56 @@
+name: 🌩 Fetch Cloudflare Optimized IPs
+
+on:
+  schedule:
+    # 每30分钟执行一次 (UTC时间，北京时间=UTC+8)
+    - cron: '0,30 * * * *'
+  workflow_dispatch:  # 允许手动触发
+
+permissions:
+  contents: write  # 允许推送到仓库
+
+jobs:
+  fetch-ips:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐍 Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install playwright requests beautifulsoup4 lxml
+          playwright install chromium --with-deps
+
+      - name: 🕷️ Fetch & parse IP data
+        run: python scripts/fetch_ips.py
+
+      - name: 📊 Show result preview
+        run: |
+          echo "====== ips.txt 前20行预览 ======"
+          head -20 ips.txt || echo "(文件为空或不存在)"
+          echo ""
+          echo "====== 统计 ======"
+          wc -l ips.txt || true
+
+      - name: 💾 Commit & push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ips.txt
+          if git diff --cached --quiet; then
+            echo "✅ 数据无变化，跳过提交"
+          else
+            TIMESTAMP=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S CST')
+            COUNT=$(wc -l < ips.txt)
+            git commit -m "🔄 自动更新优选IP [${TIMESTAMP}] 共${COUNT}条"
+            git push
+          fi
