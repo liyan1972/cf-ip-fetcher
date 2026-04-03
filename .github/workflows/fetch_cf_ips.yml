@@ -3,8 +3,7 @@ name: 🌩 Fetch Cloudflare Optimized IPs
 on:
   schedule:
     # 每30分钟执行一次 (UTC时间)
-    - cron: '0 * * * *'
-    - cron: '30 * * * *'
+    - cron: '0 */4 * * *'
   workflow_dispatch:  # 允许手动触发
 
 permissions:
