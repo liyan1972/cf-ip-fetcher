@@ -4,6 +4,7 @@ on:
   schedule:
     # 每60分钟执行一次 (UTC时间)
     - cron: '0 * * * *'
+    - cron: '30 * * * *'
   workflow_dispatch:  # 允许手动触发
 
 permissions:
