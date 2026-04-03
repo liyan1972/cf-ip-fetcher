@@ -1,6 +1,6 @@
 # 🌩 Cloudflare 优选IP 自动采集
 
-每**30分钟**自动从网站抓取最新 Cloudflare 优选IP
+每**四个小时**自动从网站抓取最新 Cloudflare 优选IP
 
 ---
 
