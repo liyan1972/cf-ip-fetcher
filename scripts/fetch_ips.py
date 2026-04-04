@@ -4,7 +4,7 @@ Cloudflare 优选 IP 爬取脚本
 数据源1: https://ip.v2too.top        (requests 直接拉取)
 数据源2: https://api.uouin.com/cloudflare.html (Playwright 无头浏览器)
 输出格式: IP#线路_来源  例: 162.159.45.187#电信_v2too
-同一IP两个来源都有时随机保留一条，按运营商排序
+排序规则: 运营商(电信>联通>移动) → 来源(v2too>uouin) → 源网站原始顺序
 """
 
 import re
@@ -27,7 +27,8 @@ ISP_ALIAS = {
     "mobile":  "移动", "cm": "移动", "chinamobile":  "移动",
     "cmcc":    "移动", "edu": "教育网", "cernet": "教育网",
 }
-ISP_ORDER = {"电信": 0, "联通": 1, "移动": 2}
+ISP_ORDER    = {"电信": 0, "联通": 1, "移动": 2}
+SOURCE_ORDER = {"v2too": 0, "uouin": 1}   # 来源优先级
 CST   = timezone(timedelta(hours=8))
 IP_RE = re.compile(r"^\d{1,3}(\.\d{1,3}){3}$")
 # ────────────────────────────────────────────────────────────
@@ -217,21 +218,31 @@ def fetch_uouin() -> list[tuple[str, str]]:
 # 合并 & 输出
 # ══════════════════════════════════════════════════════════
 def merge_and_write(all_results: list[tuple[str, str]]):
-    # 以 IP 为 key 去重，先出现的保留（v2too 优先，因为先抓）
-    seen_ip: dict[str, str] = {}
-    for ip, label in all_results:
+    # 以 IP 为 key 去重，保留先出现的（v2too 优先）
+    seen_ip: set[str] = set()
+    # 带原始位置索引: (ip, label, index)
+    unique: list[tuple[str, str, int]] = []
+    for idx, (ip, label) in enumerate(all_results):
         if not IP_RE.match(ip):
             continue
         if ip not in seen_ip:
-            seen_ip[ip] = label
+            seen_ip.add(ip)
+            unique.append((ip, label, idx))
 
-    # 按运营商排序
-    def sort_key(item: tuple[str, str]):
-        isp = item[1].split("_")[0]   # 从 "电信_v2too" 取 "电信"
-        return (ISP_ORDER.get(isp, 9), item[0])
+    # 排序：运营商 → 来源 → 原始位置（保留源网站顺序）
+    def sort_key(item: tuple[str, str, int]):
+        ip, label, idx = item
+        parts  = label.split("_", 1)
+        isp    = parts[0]                          # 电信 / 联通 / 移动
+        source = parts[1] if len(parts) > 1 else ""  # v2too / uouin
+        return (
+            ISP_ORDER.get(isp, 9),
+            SOURCE_ORDER.get(source, 9),
+            idx,                                   # 保留原始顺序
+        )
 
-    sorted_items = sorted(seen_ip.items(), key=sort_key)
-    lines = [f"{ip}#{label}" for ip, label in sorted_items]
+    unique.sort(key=sort_key)
+    lines = [f"{ip}#{label}" for ip, label, _ in unique]
 
     ts = datetime.now(CST).strftime("%Y-%m-%d %H:%M:%S")
     header = (
@@ -245,7 +256,7 @@ def merge_and_write(all_results: list[tuple[str, str]]):
     print(f"\n[{now()}] ✅ 写入 {OUTPUT_FILE}，共 {len(lines)} 条（IP去重后）")
 
     stats: dict[str, int] = {}
-    for _, label in sorted_items:
+    for _, label, _ in unique:
         isp = label.split("_")[0]
         stats[isp] = stats.get(isp, 0) + 1
     for isp, cnt in sorted(stats.items(), key=lambda x: ISP_ORDER.get(x[0], 9)):
