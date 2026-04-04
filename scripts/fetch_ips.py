@@ -3,7 +3,8 @@
 Cloudflare 优选 IP 爬取脚本
 数据源1: https://ip.v2too.top        (requests 直接拉取)
 数据源2: https://api.uouin.com/cloudflare.html (Playwright 无头浏览器)
-输出格式: IP#线路  例: 162.159.45.187#电信
+输出格式: IP#线路_来源  例: 162.159.45.187#电信_v2too
+同一IP两个来源都有时随机保留一条，按运营商排序
 """
 
 import re
@@ -41,11 +42,16 @@ def normalize_isp(raw: str) -> str:
     return ISP_ALIAS.get(key, raw.strip())
 
 
+def make_label(isp: str, source: str) -> str:
+    return f"{isp}_{source}"
+
+
 # ══════════════════════════════════════════════════════════
 # 数据源 1: ip.v2too.top
 # ══════════════════════════════════════════════════════════
 def fetch_v2too() -> list[tuple[str, str]]:
     url = "https://ip.v2too.top"
+    source = "v2too"
     print(f"[{now()}] ── 数据源1: {url}")
     try:
         resp = requests.get(
@@ -66,17 +72,14 @@ def fetch_v2too() -> list[tuple[str, str]]:
     current_isp = "未知"
 
     texts = [t.strip() for t in soup.get_text(separator="\n").splitlines() if t.strip()]
-
     for line in texts:
-        # 识别线路标题
         for isp_name in ["电信", "联通", "移动", "教育网"]:
             if isp_name in line and ("更新" in line or "时间" in line or "暂无" in line):
                 current_isp = isp_name
                 break
-        # 识别 IP
         first = line.split()[0] if line.split() else ""
         if IP_RE.match(first):
-            results.append((first, current_isp))
+            results.append((first, make_label(current_isp, source)))
 
     print(f"  ✅ 获取到 {len(results)} 条IP")
     return results
@@ -85,7 +88,7 @@ def fetch_v2too() -> list[tuple[str, str]]:
 # ══════════════════════════════════════════════════════════
 # 数据源 2: api.uouin.com  (Playwright)
 # ══════════════════════════════════════════════════════════
-def extract_from_json(data) -> list[tuple[str, str]]:
+def extract_from_json(data, source: str) -> list[tuple[str, str]]:
     results: list[tuple[str, str]] = []
     if isinstance(data, list):
         for item in data:
@@ -93,11 +96,11 @@ def extract_from_json(data) -> list[tuple[str, str]]:
             isp = (item.get("isp") or item.get("ISP") or
                    item.get("line") or item.get("type") or "")
             if ip and isp:
-                results.append((ip.strip(), normalize_isp(isp)))
+                results.append((ip.strip(), make_label(normalize_isp(isp), source)))
         return results
     if isinstance(data, dict):
         if "data" in data and isinstance(data["data"], list):
-            return extract_from_json(data["data"])
+            return extract_from_json(data["data"], source)
         for key, val in data.items():
             if isinstance(val, list):
                 isp_label = normalize_isp(key)
@@ -109,11 +112,11 @@ def extract_from_json(data) -> list[tuple[str, str]]:
                     elif isinstance(item, str):
                         ip = item
                     if ip:
-                        results.append((ip.strip(), isp_label))
+                        results.append((ip.strip(), make_label(isp_label, source)))
     return results
 
 
-def parse_html_fallback(html: str) -> list[tuple[str, str]]:
+def parse_html_fallback(html: str, source: str) -> list[tuple[str, str]]:
     soup = BeautifulSoup(html, "lxml")
     results: list[tuple[str, str]] = []
     for table in soup.find_all("table"):
@@ -129,7 +132,7 @@ def parse_html_fallback(html: str) -> list[tuple[str, str]]:
             isp = (cells[isp_col].get_text(strip=True)
                    if isp_col is not None and isp_col < len(cells) else "未知")
             if IP_RE.match(ip):
-                results.append((ip, normalize_isp(isp)))
+                results.append((ip, make_label(normalize_isp(isp), source)))
     if not results:
         isp_re = re.compile(r"(电信|联通|移动|教育网|telecom|unicom|mobile)", re.I)
         for m in re.finditer(r"\b(\d{1,3}(?:\.\d{1,3}){3})\b", html):
@@ -137,12 +140,13 @@ def parse_html_fallback(html: str) -> list[tuple[str, str]]:
             window = html[max(0, m.start()-60): m.end()+60]
             m2 = isp_re.search(window)
             isp = normalize_isp(m2.group(1)) if m2 else "未知"
-            results.append((ip, isp))
+            results.append((ip, make_label(isp, source)))
     return results
 
 
 def fetch_uouin() -> list[tuple[str, str]]:
     url = "https://api.uouin.com/cloudflare.html"
+    source = "uouin"
     print(f"[{now()}] ── 数据源2: {url}")
     try:
         from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
@@ -176,7 +180,7 @@ def fetch_uouin() -> list[tuple[str, str]]:
                 ct = response.headers.get("content-type", "")
                 if "json" in ct and "cloudflare" in response.url.lower():
                     try:
-                        items = extract_from_json(response.json())
+                        items = extract_from_json(response.json(), source)
                         if items:
                             print(f"  [XHR] {response.url} → {len(items)} 条")
                             captured.extend(items)
@@ -204,7 +208,7 @@ def fetch_uouin() -> list[tuple[str, str]]:
         return captured
 
     print("  XHR 未拦截到，降级解析HTML …")
-    results = parse_html_fallback(final_html)
+    results = parse_html_fallback(final_html, source)
     print(f"  ✅ HTML 解析 {len(results)} 条IP")
     return results
 
@@ -213,33 +217,36 @@ def fetch_uouin() -> list[tuple[str, str]]:
 # 合并 & 输出
 # ══════════════════════════════════════════════════════════
 def merge_and_write(all_results: list[tuple[str, str]]):
-    seen: set[str] = set()
-    lines: list[str] = []
-    for ip, isp in all_results:
+    # 以 IP 为 key 去重，先出现的保留（v2too 优先，因为先抓）
+    seen_ip: dict[str, str] = {}
+    for ip, label in all_results:
         if not IP_RE.match(ip):
             continue
-        key = f"{ip}#{isp}"
-        if key not in seen:
-            seen.add(key)
-            lines.append(key)
+        if ip not in seen_ip:
+            seen_ip[ip] = label
 
-    # 排序：电信 > 联通 > 移动 > 其他
-    lines.sort(key=lambda x: (ISP_ORDER.get(x.split("#")[-1], 9), x))
+    # 按运营商排序
+    def sort_key(item: tuple[str, str]):
+        isp = item[1].split("_")[0]   # 从 "电信_v2too" 取 "电信"
+        return (ISP_ORDER.get(isp, 9), item[0])
+
+    sorted_items = sorted(seen_ip.items(), key=sort_key)
+    lines = [f"{ip}#{label}" for ip, label in sorted_items]
 
     ts = datetime.now(CST).strftime("%Y-%m-%d %H:%M:%S")
     header = (
         f"# Cloudflare 优选IP列表\n"
         f"# 数据源: ip.v2too.top + api.uouin.com\n"
         f"# 更新时间: {ts} CST\n"
-        f"# 格式: IP#线路  共 {len(lines)} 条\n"
+        f"# 格式: IP#线路_来源  共 {len(lines)} 条\n"
         f"# {'─'*45}\n"
     )
     OUTPUT_FILE.write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
-    print(f"\n[{now()}] ✅ 写入 {OUTPUT_FILE}，共 {len(lines)} 条（去重后）")
+    print(f"\n[{now()}] ✅ 写入 {OUTPUT_FILE}，共 {len(lines)} 条（IP去重后）")
 
     stats: dict[str, int] = {}
-    for line in lines:
-        isp = line.split("#")[-1]
+    for _, label in sorted_items:
+        isp = label.split("_")[0]
         stats[isp] = stats.get(isp, 0) + 1
     for isp, cnt in sorted(stats.items(), key=lambda x: ISP_ORDER.get(x[0], 9)):
         print(f"    {isp}: {cnt} 条")
