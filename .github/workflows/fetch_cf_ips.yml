@@ -53,7 +53,6 @@ jobs:
             echo "✅ 数据无变化，跳过提交"
           else
             TIMESTAMP=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S CST')
-            COUNT=$(wc -l < ips.txt)
-            git commit -m "🔄 自动更新优选IP [${TIMESTAMP}] 共${COUNT}条"
+            git commit -m "🔄 自动更新优选IP [${TIMESTAMP}]"
             git push
           fi
