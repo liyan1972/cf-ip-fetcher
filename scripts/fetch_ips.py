@@ -72,12 +72,25 @@ def fetch_v2too() -> list[tuple[str, str]]:
     results: list[tuple[str, str]] = []
     current_isp = "未知"
 
+    # 运营商标题关键词（兼容「电信」和「中国电信」两种写法）
+    ISP_TITLE_MAP = {
+        "电信": "电信",
+        "移动": "移动",
+        "联通": "联通",
+        "教育网": "教育网",
+    }
+    # 标题行特征词（新版：最后同步 / 旧版：更新时间）
+    TITLE_SIGNALS = ("最后同步", "更新时间", "同步", "暂无", "尚未")
+
     texts = [t.strip() for t in soup.get_text(separator="\n").splitlines() if t.strip()]
     for line in texts:
-        for isp_name in ["电信", "联通", "移动", "教育网"]:
-            if isp_name in line and ("更新" in line or "时间" in line or "暂无" in line):
-                current_isp = isp_name
-                break
+        # 识别运营商标题行
+        if any(sig in line for sig in TITLE_SIGNALS):
+            for kw, isp_name in ISP_TITLE_MAP.items():
+                if kw in line:
+                    current_isp = isp_name
+                    break
+        # 识别 IP 行
         first = line.split()[0] if line.split() else ""
         if IP_RE.match(first):
             results.append((first, make_label(current_isp, source)))
