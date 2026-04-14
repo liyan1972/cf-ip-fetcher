@@ -72,28 +72,27 @@ def fetch_v2too() -> list[tuple[str, str]]:
     results: list[tuple[str, str]] = []
     current_isp = "未知"
 
-    # 运营商标题关键词（兼容「电信」和「中国电信」两种写法）
-    ISP_TITLE_MAP = {
-        "电信": "电信",
-        "移动": "移动",
-        "联通": "联通",
-        "教育网": "教育网",
-    }
-    # 标题行特征词（新版：最后同步 / 旧版：更新时间）
-    TITLE_SIGNALS = ("最后同步", "更新时间", "同步", "暂无", "尚未")
+    ISP_KW = {"电信": "电信", "移动": "移动", "联通": "联通", "教育网": "教育网"}
 
-    texts = [t.strip() for t in soup.get_text(separator="\n").splitlines() if t.strip()]
-    for line in texts:
-        # 识别运营商标题行
-        if any(sig in line for sig in TITLE_SIGNALS):
-            for kw, isp_name in ISP_TITLE_MAP.items():
-                if kw in line:
-                    current_isp = isp_name
-                    break
-        # 识别 IP 行
-        first = line.split()[0] if line.split() else ""
+    def detect_isp(text: str):
+        for kw, name in ISP_KW.items():
+            if kw in text:
+                return name
+        return None
+
+    # 遍历所有标签，<strong> 定位运营商分区，其余提取 IP
+    for tag in soup.find_all(True):
+        if tag.name == "strong":
+            isp = detect_isp(tag.get_text())
+            if isp:
+                current_isp = isp
+            continue
+        text  = tag.get_text(strip=True)
+        first = text.split()[0] if text.split() else ""
         if IP_RE.match(first):
-            results.append((first, make_label(current_isp, source)))
+            # 避免父子标签重复添加同一IP
+            if not results or results[-1][0] != first:
+                results.append((first, make_label(current_isp, source)))
 
     print(f"  ✅ 获取到 {len(results)} 条IP")
     return results
