@@ -1,13 +1,7 @@
-ct.bestip.cc.cd#CT
-cm.bestip.cc.cd#CM
-jp.vps.edu.deal
+jp.vps.edu.deal
 sg.vps.edu.deal
 us.vps.edu.deal
-de.vps.edu.deal
-nrtcfdns.zone.id
-sjccfdns.zone.id
-laxcfdns.zone.id
-fracfdns.zone.id
+de.vps.edu.deal
 animal.nuaa.tech:2053
 animal.nuaa.tech:2083
 sub.danfeng.eu.org
