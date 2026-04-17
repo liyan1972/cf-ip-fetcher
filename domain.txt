@@ -1,4 +1,4 @@
-jp.vps.edu.deal
+jp.vps.edu.deal
 sg.vps.edu.deal
 us.vps.edu.deal
 de.vps.edu.deal
