@@ -8,6 +8,8 @@ nrtcfdns.zone.id
 sjccfdns.zone.id
 laxcfdns.zone.id
 fracfdns.zone.id
+animal.nuaa.tech:2053
+animal.nuaa.tech:2083
 sub.danfeng.eu.org
 youxuan.cf.090227.xyz
 cf-cname.xingpingcn.top
