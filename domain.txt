@@ -1,5 +1,5 @@
-ct.bestip.cc.cd#【CT】优选
-cm.bestip.cc.cd#【CM】优选
+ct.bestip.cc.cd#CT
+cm.bestip.cc.cd#CM
 jp.vps.edu.deal
 sg.vps.edu.deal
 us.vps.edu.deal
