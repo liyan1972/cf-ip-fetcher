@@ -1,7 +1,7 @@
-hk.pyip.xx.kg#优选域名
-cf1.danfeng.eu.org:443
-cf2.danfeng.eu.org:8443
-cf3.danfeng.eu.org:8443
+hk.pyip.xx.kg#域名
+cf1.danfeng.eu.org:443#域名
+cf2.danfeng.eu.org:8443#域名
+cf3.danfeng.eu.org:8443#域名
 47.238.242.90:2000#HK
 47.238.238.209:444#HK
 23.141.12.11:30000#HK
