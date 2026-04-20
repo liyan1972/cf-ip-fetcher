@@ -1,7 +1,3 @@
-jp.vps.edu.deal
-sg.vps.edu.deal
-us.vps.edu.deal
-de.vps.edu.deal
 animal.nuaa.tech:2053
 animal.nuaa.tech:2083
 sub.danfeng.eu.org
