@@ -1,6 +1,8 @@
+animal.nuaa.tech
 animal.nuaa.tech:2053
 animal.nuaa.tech:2083
-eii.at:443
+i110.hidns.cc
+eii.at
 sub.danfeng.eu.org
 youxuan.cf.090227.xyz
 cf-cname.xingpingcn.top
