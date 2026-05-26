@@ -1,3 +1,13 @@
+cf.danfeng.eu.org
+cf1.danfeng.eu.org
+cf2.danfeng.eu.org
+cf3.danfeng.eu.org
+cf4.danfeng.eu.org
+cf5.danfeng.eu.org
+cf6.danfeng.eu.org
+cf7.danfeng.eu.org
+cf8.danfeng.eu.org
+cf9.danfeng.eu.org
 animal.nuaa.tech
 animal.nuaa.tech:2053
 animal.nuaa.tech:2083
