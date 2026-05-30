@@ -1,14 +1,19 @@
 # ProxyIP高优筛选订阅
-# 正常执行后会在当前目录下生成一行一个的分析链接文件。50行一个文件。ipv4和v6都会包含在内
+# 正常执行后会在当前目录下生成纯 IP 列表文件：ProxyIP-asn-ips.txt
+# 格式为：ip:端口#地区-asn，包含 IPv4 和 IPv6
 
-import os
 import json
 import urllib.request
 import urllib.error
 
-def generate_vless_from_api():
-    TARGET_COUNTRY = None
+def generate_ips_from_api():
+    # ------------------ 配置区域 ------------------
     
+    # 支持多国筛选：用集合(Set)定义你需要保留的国家代码
+    # 如果不想限制国家，直接设置为 None 或者空集合 set() 即可
+    TARGET_COUNTRY = {"HK", "SG", "TW", "JP"}
+    
+    # 高优 ASN 筛选列表
     TARGET_ASNS = {
         906,     
         25820,   
@@ -18,41 +23,46 @@ def generate_vless_from_api():
         137929,  
         40065,   
         135064,  
-        4809,    
-        9929,    
+        4809,    # 电信 CN2
+        9929,    # 联通 9929
         58453    
     }
     
     TARGET_PORT = None
 
+    # 数据源 API 接口
     API_URL = "https://zip.cm.edu.kg/all.json"
-    vless_prefix = "vless://c2c301e9-a9db-4d91-9c7b-ff8935aeb4e1@"
-    #上一行格式为：vless_prefix = "vless://7f5a9f60-e2fb-46d0-b771-cdbe1db22046@" 更换自己的uuid+@
-    vless_suffix = "?encryption=none&security=tls&sni=ioioioi.pages.dev&fp=random&insecure=1&allowInsecure=1&type=ws&host=ioioioi.pages.dev&path=%2F%3Fed%3D2560#edgetunnel"
-    #上一行格式为：?encryption=none&security=tls&sni=.......#edgetunnel 即除了host：端口之外的所有内容
     
-    print(f"建立网络连接: 开始抓取目标接口数据 {API_URL}")
+    # 输出文件名
+    OUTPUT_FILENAME = "ProxyIP-asn-ips.txt"
     
+    # ---------------------------------------------
+
+    request_headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        )
+    }
+
+    print(f"建立网络连接: 开始抓取目标接口数据 {API_URL} ...")
     try:
-        request_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         req = urllib.request.Request(API_URL, headers=request_headers)
-        with urllib.request.urlopen(req, timeout=20) as response:
-            json_response = response.read().decode('utf8')
-            raw_data = json.loads(json_response)
+        with urllib.request.urlopen(req, timeout=15) as response:
+            html_content = response.read().decode("utf-8")
+            raw_data = json.loads(html_content)
     except urllib.error.URLError as e:
-        print(f"致命阻断: 网络通信故障 详情: {e}")
+        print(f"网络连接失败: 无法访问 API 接口，错误原因: {e}")
         return
-    except json.JSONDecodeError as e:
-        print(f"致命阻断: 数据结构损坏 详情: {e}")
+    except json.JSONDecodeError:
+        print("数据解析失败: 接口返回的数据不是有效的 JSON 格式。")
         return
     except Exception as e:
-        print(f"致命阻断: 发生未预期错误 详情: {e}")
+        print(f"发生未知错误: {e}")
         return
 
-    print("数据拉取完毕: 启动数据结构动态重构机制")
-    
     node_data_list = []
-    
     if isinstance(raw_data, list):
         node_data_list = raw_data
     elif isinstance(raw_data, dict):
@@ -61,33 +71,35 @@ def generate_vless_from_api():
                 node_data_list.extend(value)
             elif isinstance(value, dict):
                 node_data_list.append(value)
-
-    if not node_data_list:
-        print("致命阻断: 原始 JSON 结构解析失败或数据源为空。")
+    else:
+        print("数据结构异常: 无法识别的 JSON 骨架类型。")
         return
-        
+
+    print(f"接口数据拉取成功: 准备分析总计 {len(node_data_list)} 条原始数据...")
+
     seen_ips = set()
-    final_links = []
+    final_ip_lines = []
 
     for item in node_data_list:
         if not isinstance(item, dict):
             continue
-            
+
         meta_data = item.get("meta", {})
-        
-        port = item.get("_port") or meta_data.get("_port")
-        if port is None:
-            port_list = item.get("port")
-            if isinstance(port_list, list) and len(port_list) > 0:
-                port = port_list[0]
-                
-        country = meta_data.get("country")
-        asn = meta_data.get("asn")
+        if not isinstance(meta_data, dict):
+            meta_data = {}
+
+        country = meta_data.get("country", "UNKNOWN")
+        asn = meta_data.get("asn", "UNKNOWN")
+
+        port = item.get("_port") or item.get("port")
+        if isinstance(port, list) and len(port) > 0:
+            port = port[0]
 
         if port is None:
             continue
 
-        if TARGET_COUNTRY and country != TARGET_COUNTRY:
+        # 多国筛选过滤
+        if TARGET_COUNTRY and country not in TARGET_COUNTRY:
             continue
             
         if TARGET_ASNS and asn not in TARGET_ASNS:
@@ -114,31 +126,30 @@ def generate_vless_from_api():
 
             seen_ips.add(current_ip)
             
+            # 如果是 IPv6 地址，包裹中括号
             if ":" in current_ip:
                 formatted_ip = f"[{current_ip}]"
             else:
                 formatted_ip = current_ip
                 
-            full_url = f"{vless_prefix}{formatted_ip}:{port}{vless_suffix}"
-            final_links.append(full_url)
+            # 格式化输出为：ip:端口#地区-asn
+            ip_line = f"{formatted_ip}:{port}#{country}-{asn}\n"
+            final_ip_lines.append(ip_line)
 
-    total_links = len(final_links)
-    print(f"多维匹配完成: 精确筛出并去重 {total_links} 个独立合规节点。")
+    total_ips = len(final_ip_lines)
+    print(f"多维匹配完成: 精确筛出并去重 {total_ips} 个独立合规 IP。")
 
-    if total_links == 0:
+    if total_ips == 0:
+        print("未筛选到符合国家和 ASN 条件的优质节点，停止生成文件。")
         return
 
-    chunk_size = 50
-    for i in range(0, total_links, chunk_size):
-        chunk = final_links[i : i + chunk_size]
-        file_index = (i // chunk_size) + 1
-        output_filename = f"vless_api_part{file_index}.txt"
-
-        with open(output_filename, 'w', encoding='utf8') as out_f:
-            for link in chunk:
-                out_f.write(link + "\n")
-
-        print(f"数据固化: {output_filename} 封装完毕包含 {len(chunk)} 条记录")
+    # 统一写入单个目标文件
+    try:
+        with open(OUTPUT_FILENAME, "w", encoding="utf-8") as f:
+            f.writelines(final_ip_lines)
+        print(f"文件保存成功: {OUTPUT_FILENAME} (共包含 {total_ips} 行数据)")
+    except IOError as e:
+        print(f"文件写入失败 {OUTPUT_FILENAME}: {e}")
 
 if __name__ == "__main__":
-    generate_vless_from_api()
+    generate_ips_from_api():
