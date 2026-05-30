@@ -28,7 +28,7 @@ jobs:
 
     # 3. 执行你的筛选脚本
     - name: 执行筛选脚本
-      run: python ProxyIP-asn-filter.py
+      run: python scripts/ProxyIP-asn-filter.py
 
     # 4. 将生成的 vless_api_part*.txt 文件自动提交并推送到仓库
     - name: 提交并推送生成的订阅文件
