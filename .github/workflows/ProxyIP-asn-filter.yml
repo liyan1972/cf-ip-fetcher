@@ -1,0 +1,52 @@
+name: 🌩 ProxyIP-asn-filter
+
+# 配置触发条件
+on:
+  schedule:
+    # 每天北京时间早上 6:00 自动运行
+    # 注：GitHub Actions 的 cron 使用的是 UTC 时间（世界标准时），北京时间 (UTC+8) 的 06:00 对应 UTC 的前一天 22:00
+    - cron: '0 22 * * *'
+  
+  # 允许你在 GitHub 网页端手动点击 "Run workflow" 按钮立刻触发运行
+  workflow_dispatch: 
+
+# 任务执行流程
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. 检出仓库中的代码到 GitHub 虚拟服务器
+    - name: 检出仓库代码
+      uses: actions/checkout@v4
+
+    # 2. 部署 Python 环境
+    - name: 设置 Python 环境
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    # 3. 执行你的筛选脚本
+    - name: 执行筛选脚本
+      run: python ProxyIP-asn-filter.py
+
+    # 4. 将生成的 vless_api_part*.txt 文件自动提交并推送到仓库
+    - name: 提交并推送生成的订阅文件
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        # 检查是否有新生成或更新的 txt 文件
+        if ls vless_api_part*.txt 1> /dev/null 2>&1; then
+          git add vless_api_part*.txt
+          
+          # 检查是否有内容变更，如果有则提交，没有则跳过
+          if git diff --staged --quiet; then
+            echo "节点列表未发生变化，无需更新。"
+          else
+            git commit -m "自动更新优质节点列表 (时间: $(date +'%Y-%m-%d %H:%M:%S'))"
+            git push origin main
+          fi
+        else
+          echo "未检测到生成的订阅文件，请检查脚本执行状态。"
+        fi
