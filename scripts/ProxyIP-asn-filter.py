@@ -11,7 +11,7 @@ def generate_ips_from_api():
     
     # 支持多国筛选：用集合(Set)定义你需要保留的国家代码
     # 如果不想限制国家，直接设置为 None 或者空集合 set() 即可
-    TARGET_COUNTRY = {"HK", "SG", "TW", "JP"}
+    TARGET_COUNTRY = {"HK", "SG", "TW", "JP", "KR", "US"}
     
     # 高优 ASN 筛选列表
     TARGET_ASNS = {
@@ -26,14 +26,14 @@ def generate_ips_from_api():
         396982,
         137929,
         132203,
-		      153371,
+		153371,
         40065,
         63150,
         45102,
         400618,
         401443,
         400464,
-		      209242,
+		209242,
         140096,
         135064,
         4809,    # 电信 CN2
