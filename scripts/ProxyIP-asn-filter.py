@@ -24,7 +24,8 @@ def generate_ips_from_api():
         4515,   # PCCW
         8069,   # Microsoft
         8075,   # Microsoft
-        8069,   # IT7
+        25820,  # IT7
+        20473,  # IT7 SG
         32097,  # WII
         38136,  # Akari
         49304,  # SAKURA
