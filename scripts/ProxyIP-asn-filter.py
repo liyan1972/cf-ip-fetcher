@@ -50,9 +50,9 @@ def generate_ips_from_api():
         400464, # VMISS
         140096, # JINX
         135064, # Rio Tinto
-        4809,   # CHINATELECOM CN2
-        9929,   # CHINAUNICOM 9929
-        58453   # China Mobile CTGNet
+        4809,   # China Telecom CN2
+        9929,   # China Unicom 9929
+        58453,  # China Mobile CTGNet
         58807   # China Mobile CMIN2
     }
     
