@@ -15,28 +15,45 @@ def generate_ips_from_api():
     
     # 高优 ASN 筛选列表
     TARGET_ASNS = {
-        906,
-        3258,
-        25820,
-        32097,
-        38136,
-        49304,
-        63888,
-        10509,
-        396982,
-        137929,
-        132203,
-        40065,
-        63150,
-        45102,
-        400618,
-        401443,
-        400464,
-        140096,
-        135064,
-        4809,    # 电信 CN2
-        9929,    # 联通 9929
-        58453
+        906,    # DMIT
+        137929, # DMIT HK
+        3258,   # xTom
+        9312,   # xTom
+        9269,   # HKBN
+        3462,   # HINET
+        4515,   # PCCW
+        8069,   # Microsoft
+        8075,   # Microsoft
+        8069,   # IT7
+        32097,  # WII
+        38136,  # Akari
+        49304,  # SAKURA
+        16509,  # Amazon
+        36002,  # GoMami
+        63888,  # DATA WING
+        10509,  # IEWAY
+        396982, # Google
+        136907, # HWCLOUDS
+        132203, # TENCENT
+        40065,  # CNSERVERS
+        63150,  # BAGE
+        17676,  # SoftBank
+        45102,  # Alibaba
+        140227, # HKCICL
+        136168, # Campana
+        31898,  # Oracle
+        61112,  # AkileCloud
+        400618, # PRIME
+        136258, # BrainStorm
+        401443, # WAP-AC
+		149440, # Evoxt
+        400464, # VMISS
+        140096, # JINX
+        135064, # Rio Tinto
+        4809,   # CHINATELECOM CN2
+        9929,   # CHINAUNICOM 9929
+        58453   # CMI-INT-HK
+        58807   # China Mobile CMIN2
     }
     
     TARGET_PORT = None
