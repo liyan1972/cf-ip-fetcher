@@ -45,14 +45,14 @@ def generate_ips_from_api():
         61112,  # AkileCloud
         400618, # PRIME
         136258, # BrainStorm
-        401443, # WAP-AC
+        401443, # WAP AC
 		149440, # Evoxt
         400464, # VMISS
         140096, # JINX
         135064, # Rio Tinto
         4809,   # CHINATELECOM CN2
         9929,   # CHINAUNICOM 9929
-        58453   # CMI-INT-HK
+        58453   # China Mobile CTGNet
         58807   # China Mobile CMIN2
     }
     
