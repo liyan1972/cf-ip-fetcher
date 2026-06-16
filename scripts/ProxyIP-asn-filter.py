@@ -24,6 +24,7 @@ def generate_ips_from_api():
         4515,   # PCCW
         8069,   # Microsoft
         8075,   # Microsoft
+        4766,   # Korea Telecom
         25820,  # IT7
         20473,  # IT7 SG
         32097,  # WII
