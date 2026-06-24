@@ -39,7 +39,7 @@ def generate_ips_from_api():
 		35916,  # MULTACOM
         38136,  # Akari
 		45748,  # PIA
-		46829.  # Lamhosting
+		46829,  # Lamhosting
         49304,  # SAKURA
 		51847,  # Nearoute
         16509,  # Amazon
