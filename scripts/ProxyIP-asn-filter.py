@@ -16,41 +16,68 @@ def generate_ips_from_api():
     # 高优 ASN 筛选列表
     TARGET_ASNS = {
         906,    # DMIT
+		54574,  # DMIT US
         137929, # DMIT HK
+        3214,   # xTom
         3258,   # xTom
         9312,   # xTom
         9269,   # HKBN
+		9371,   # SAKURA
         3462,   # HINET
         4515,   # PCCW
+		7586,   # Cloudfort
         8069,   # Microsoft
         8075,   # Microsoft
+		8796,   # FASTNET DATA
         4766,   # Korea Telecom
+		9848,   # SejongTelecom
+		11161,  # DigitalVirt
         25820,  # IT7
         20473,  # IT7 SG
+		20081,  # NET2ATLANTA
         32097,  # WII
+		35916,  # MULTACOM
         38136,  # Akari
+		45748,  # PIA
+		46829.  # Lamhosting
         49304,  # SAKURA
+		51847,  # Nearoute
         16509,  # Amazon
         36002,  # GoMami
+		46783,  # EASY LINK
+		46844,  # Sharktech
+		54600,  # PEG TECH
         63888,  # DATA WING
         10509,  # IEWAY
-        396982, # Google
-        136907, # HWCLOUDS
-        132203, # TENCENT
         40065,  # CNSERVERS
         63150,  # BAGE
         17676,  # SoftBank
         45102,  # Alibaba
-        140227, # HKCICL
-        136168, # Campana
+		55933,  # Cloudie
         31898,  # Oracle
         61112,  # AkileCloud
+		40676,  # Psychz Networks
+        396982, # Google
+		137990, # SUNIWAY
+		134520, # GigsGigs
+        136907, # HWCLOUDS
+        132203, # TENCENT
+		139803, # iOVZ
+        140227, # HKCICL
+		140224, # Nebula
+        136168, # Campana
         400618, # PRIME
         136258, # BrainStorm
         401443, # WAP AC
+		151964, # ZGX PTY
+		140869, # Turing Group
+		209554, # ISIF
 		149440, # Evoxt
+		152194, # CTG Server
+		212083, # Evoxt
         400464, # VMISS
         140096, # JINX
+		133441, # CloudITIDC
         135064, # Rio Tinto
         4809,   # China Telecom CN2
         9929,   # China Unicom 9929
