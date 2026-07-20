@@ -50,6 +50,7 @@ cdn.262832.xyz
 cloudflare.cfgo.cc
 nrt.xxxxxxxx.nyc.mn
 www.nexusmods.com
+yx.cloudflare.182682.xyz
 freeyx.cloudflare88.eu.org
 cloudflare-ip.mofashi.ltd
 staticdelivery.nexusmods.com
